@@ -29,7 +29,7 @@ export default function() {
         }
     };
 
-    const response = http.post('http://localhost:3000/webhook', payload, params);
+    const response = http.post('http://localhost:3000/proxy', payload, params);
 
     check(response, {
         'status is 200 or 500': (r) => [200, 500].includes(r.status)

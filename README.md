@@ -23,7 +23,7 @@ A Rust-based HTTP proxy service that can simulate failures with configurable pro
 
 1. Clone the repository:
    ```bash
-   git clone [repository-url]
+   git clone git@github.com:yihaozhadan/http-proxy.git
    cd http-proxy
    ```
 

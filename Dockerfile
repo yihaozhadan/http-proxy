@@ -1,4 +1,4 @@
-FROM rust:1.75-slim as builder
+FROM rust:1.75-slim AS builder
 
 WORKDIR /usr/src/app
 COPY . .
@@ -26,4 +26,4 @@ ENV SUCCESS_PROBABILITY=0.8
 
 EXPOSE 3000
 
-CMD ["http-proxy"]
+CMD ["./http-proxy"]
