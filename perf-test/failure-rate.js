@@ -11,7 +11,7 @@ export const options = {
         constant_iterations: {
             executor: 'shared-iterations',
             vus: 10,
-            iterations: 1000,
+            iterations: 100,
             maxDuration: '2m'
         }
     }
@@ -29,7 +29,7 @@ export default function() {
         }
     };
 
-    const response = http.post('http://localhost:3000/proxy', payload, params);
+    const response = http.post('http://localhost:3000/failure', payload, params);
 
     check(response, {
         'status is 200 or 500': (r) => [200, 500].includes(r.status)

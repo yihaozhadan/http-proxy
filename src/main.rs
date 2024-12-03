@@ -69,7 +69,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/webhook", post(webhook_handler))
-        .route("/proxy", post(proxy_handler))
+        .route("/failure", post(failure_handler))
         .route("/healthcheck", get(healthcheck))
         .with_state(state);
     
@@ -107,15 +107,22 @@ async fn healthcheck() -> (StatusCode, Json<Value>) {
 }
 
 #[axum::debug_handler]
-async fn proxy_handler(
+async fn failure_handler(
     State(state): State<SharedState>,
     headers: HeaderMap,
     Json(payload): Json<Value>,
 ) -> (StatusCode, Json<Value>) {
     let (client, config) = &*state;
     
+    // Check for custom failure rate header
+    let failure_rate: f64 = headers
+        .get("X-Failure-Rate")
+        .and_then(|h| h.to_str().ok())
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(1.0 - config.success_probability);
+
     // Generate random number before any await points
-    let should_succeed = rand::thread_rng().gen_bool(config.success_probability);
+    let should_succeed = rand::thread_rng().gen_bool(1.0 - failure_rate);
 
     // Check if we should fail based on probability
     if !should_succeed {
@@ -124,7 +131,7 @@ async fn proxy_handler(
             Json(json!({
                 "error": "Simulated failure",
                 "target_url": &config.target_url,
-                "success_probability": config.success_probability,
+                "failure_rate": failure_rate,
                 "request_body": payload
             }))
         );

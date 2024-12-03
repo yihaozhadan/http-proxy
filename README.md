@@ -59,10 +59,10 @@ A Rust-based HTTP proxy service that can simulate failures with configurable pro
 The service can be configured using environment variables:
 
 - `TARGET_URL`: The default target URL for proxying requests (required)
-- `SUCCESS_PROBABILITY`: Probability of successful request forwarding (default: 0.8)
+- `SUCCESS_PROBABILITY`: Default probability of successful request forwarding (default: 0.8)
   - Must be a float between 0.0 and 1.0
   - 0.0 means all requests fail
-  - 1.0 means all requests are forwarded
+  - 1.0 means all requests succeed
 
 ## API Endpoints
 
@@ -77,27 +77,53 @@ curl -X POST http://localhost:3000/webhook \
   -d '{"test": "data"}'
 ```
 
-### POST /proxy
+### POST /failure
 
-Forwards POST requests to the configured target URL with probability-based failure simulation.
+Forwards POST requests to the configured target URL with configurable failure simulation.
 
 **Headers:**
 - `Content-Type: application/json` (required)
 - `X-Proxy-Url`: Optional. Override the default target URL for testing
+- `X-Failure-Rate`: Optional. Override the default failure rate (value between 0.0 and 1.0)
+  - If not provided, uses `1.0 - SUCCESS_PROBABILITY` from environment config
+  - 0.0 means no failures
+  - 1.0 means all requests fail
 
-**Example with default target:**
+**Example with default configuration:**
 ```bash
-curl -X POST http://localhost:3000/proxy \
+curl -X POST http://localhost:3000/failure \
   -H "Content-Type: application/json" \
   -d '{"test": "data"}'
 ```
 
-**Example with custom target:**
+**Example with custom failure rate:**
 ```bash
-curl -X POST http://localhost:3000/proxy \
+curl -X POST http://localhost:3000/failure \
+  -H "Content-Type: application/json" \
+  -H "X-Failure-Rate: 0.3" \
+  -d '{"test": "data"}'
+```
+
+**Example with custom target and failure rate:**
+```bash
+curl -X POST http://localhost:3000/failure \
   -H "Content-Type: application/json" \
   -H "X-Proxy-Url: https://api.example.com/endpoint" \
+  -H "X-Failure-Rate: 0.5" \
   -d '{"test": "data"}'
+```
+
+## Error Responses
+
+When a request fails (either due to probability or actual errors), the service returns a detailed error response:
+
+```json
+{
+  "error": "Simulated failure",
+  "target_url": "https://api.example.com/endpoint",
+  "failure_rate": 0.3,
+  "request_body": { "original": "request" }
+}
 ```
 
 ## Response Format
