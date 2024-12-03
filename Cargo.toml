@@ -1,0 +1,16 @@
+[package]
+name = "http-proxy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.7.3", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+serde_json = "1.0"
+rand = "0.8.5"
+hyper = { version = "1.1", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
+bytes = "1.5"
+hyper-tls = "0.6"
+dotenv = "0.15"
