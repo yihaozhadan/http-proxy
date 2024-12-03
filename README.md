@@ -66,15 +66,53 @@ The service can be configured using environment variables:
 
 ## API Endpoints
 
-### POST /webhook
+### POST /delay
 
-A test endpoint that returns success/failure responses based on the configured probability.
+Forwards POST requests to the configured target URL with configurable delays. You can specify either a constant delay, a random delay range, or both.
 
-**Example:**
+**Headers:**
+- `Content-Type: application/json` (required)
+- `X-Proxy-Url`: Optional. Override the default target URL for testing
+- `X-Constant-Delay-Ms`: Optional. Add a constant delay in milliseconds to every request
+- `X-Max-Random-Delay-Ms`: Optional. Add a random delay between 0 and the specified milliseconds
+
+**Example with constant delay:**
 ```bash
-curl -X POST http://localhost:3000/webhook \
+curl -X POST http://localhost:3000/delay \
   -H "Content-Type: application/json" \
+  -H "X-Constant-Delay-Ms: 1000" \
   -d '{"test": "data"}'
+```
+
+**Example with random delay:**
+```bash
+curl -X POST http://localhost:3000/delay \
+  -H "Content-Type: application/json" \
+  -H "X-Max-Random-Delay-Ms: 2000" \
+  -d '{"test": "data"}'
+```
+
+**Example with both delays and custom target:**
+```bash
+curl -X POST http://localhost:3000/delay \
+  -H "Content-Type: application/json" \
+  -H "X-Proxy-Url: https://api.example.com/endpoint" \
+  -H "X-Constant-Delay-Ms: 500" \
+  -H "X-Max-Random-Delay-Ms: 1000" \
+  -d '{"test": "data"}'
+```
+
+**Success Response:**
+```json
+{
+  "status": "success",
+  "applied_delays": {
+    "constant_delay_ms": 500,
+    "random_delay_ms": "0-1000"
+  },
+  "target_url": "https://api.example.com/endpoint",
+  "response": { "original": "response" }
+}
 ```
 
 ### POST /failure
@@ -183,4 +221,24 @@ cargo run
 
 ## License
 
-[Add your license information here]
+MIT License
+
+Copyright (c) 2024 Hui Zhou
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
