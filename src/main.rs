@@ -1,5 +1,5 @@
 use axum::{
-    routing::post,
+    routing::{post, get},
     Router,
     http::{StatusCode, HeaderMap},
     response::Json,
@@ -16,6 +16,7 @@ use http_body_util::{Full, BodyExt};
 use std::env;
 use dotenv::dotenv;
 use serde_json::Value;
+use chrono;
 
 // Configuration struct to hold environment variables
 #[derive(Clone)]
@@ -69,6 +70,7 @@ async fn main() {
     let app = Router::new()
         .route("/webhook", post(webhook_handler))
         .route("/proxy", post(proxy_handler))
+        .route("/healthcheck", get(healthcheck))
         .with_state(state);
     
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -94,6 +96,14 @@ async fn webhook_handler(
             "message": "Internal server error"
         })))
     }
+}
+
+// Add healthcheck handler
+async fn healthcheck() -> (StatusCode, Json<Value>) {
+    (StatusCode::OK, Json(json!({
+        "status": "healthy",
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    })))
 }
 
 #[axum::debug_handler]

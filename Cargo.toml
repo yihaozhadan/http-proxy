@@ -14,3 +14,4 @@ http-body-util = "0.1"
 bytes = "1.5"
 hyper-tls = "0.6"
 dotenv = "0.15"
+chrono = { version = "0.4", features = ["serde"] }
