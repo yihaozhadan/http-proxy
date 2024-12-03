@@ -126,6 +126,7 @@ Forwards POST requests to the configured target URL with configurable failure si
   - If not provided, uses `1.0 - SUCCESS_PROBABILITY` from environment config
   - 0.0 means no failures
   - 1.0 means all requests fail
+- `X-Failure-Status-Code`: Optional. Specify the HTTP status code to return on failure (default: 500)
 
 **Example with default configuration:**
 ```bash
@@ -149,6 +150,29 @@ curl -X POST http://localhost:3000/failure \
   -H "X-Proxy-Url: https://api.example.com/endpoint" \
   -H "X-Failure-Rate: 0.5" \
   -d '{"test": "data"}'
+```
+
+**Example with custom failure status code:**
+```bash
+# Simulate a 404 Not Found error with 50% probability
+curl -X POST http://localhost:3000/failure \
+  -H "Content-Type: application/json" \
+  -H "X-Failure-Rate: 0.5" \
+  -H "X-Failure-Status-Code: 404" \
+  -d '{"test": "data"}'
+```
+
+**Response on failure:**
+```json
+{
+  "error": "Simulated failure",
+  "target_url": "https://api.example.com",
+  "failure_rate": 0.5,
+  "status_code": 404,
+  "request_body": {
+    "test": "data"
+  }
+}
 ```
 
 ## Error Responses

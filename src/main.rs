@@ -194,27 +194,37 @@ async fn failure_handler(
         .and_then(|s| s.parse().ok())
         .unwrap_or(1.0 - config.success_probability);
 
+    // Get custom failure status code from header, default to 500
+    let failure_status = headers
+        .get("X-Failure-Status-Code")
+        .and_then(|h| h.to_str().ok())
+        .and_then(|s| s.parse::<u16>().ok())
+        .map(StatusCode::from_u16)
+        .and_then(Result::ok)
+        .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+
     // Generate random number before any await points
     let should_succeed = rand::thread_rng().gen_bool(1.0 - failure_rate);
-
-    // Check if we should fail based on probability
-    if !should_succeed {
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({
-                "error": "Simulated failure",
-                "target_url": &config.target_url,
-                "failure_rate": failure_rate,
-                "request_body": payload
-            }))
-        );
-    }
 
     // Allow header override of target URL for testing
     let target_url = headers
         .get("X-Proxy-Url")
         .and_then(|h| h.to_str().ok())
         .unwrap_or(&config.target_url);
+
+    // Check if we should fail based on probability
+    if !should_succeed {
+        return (
+            failure_status,
+            Json(json!({
+                "error": "Simulated failure",
+                "target_url": target_url,
+                "failure_rate": failure_rate,
+                "status_code": failure_status.as_u16(),
+                "request_body": payload
+            }))
+        );
+    }
 
     // Convert the JSON payload to bytes
     let body_bytes = match serde_json::to_vec(&payload) {
