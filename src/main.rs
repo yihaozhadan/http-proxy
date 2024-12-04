@@ -187,6 +187,13 @@ async fn failure_handler(
 ) -> (StatusCode, Json<Value>) {
     let (client, config) = &*state;
     
+    // Check if we should return original response
+    let return_original = headers
+        .get("X-Return-Original")
+        .and_then(|h| h.to_str().ok())
+        .and_then(|s| s.parse::<bool>().ok())
+        .unwrap_or(false);
+
     // Check for custom failure rate header
     let failure_rate: f64 = headers
         .get("X-Failure-Rate")
@@ -212,7 +219,7 @@ async fn failure_handler(
         .and_then(|h| h.to_str().ok())
         .unwrap_or(&config.target_url);
 
-    // Check if we should fail based on probability
+    // If return_original is false, check if we should fail based on probability
     if !should_succeed {
         return (
             failure_status,
@@ -269,11 +276,15 @@ async fn failure_handler(
                 Err(_) => Value::Null,
             };
             
-            (status, Json(json!({
-                "status": "success",
-                "target_url": target_url,
-                "response": body
-            })))
+            if return_original {
+                (status, Json(body))
+            } else {
+                (status, Json(json!({
+                    "status": "success",
+                    "target_url": target_url,
+                    "response": body
+                })))
+            }
         }
         Err(e) => (
             StatusCode::BAD_GATEWAY,
